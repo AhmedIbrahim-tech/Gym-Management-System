@@ -1,0 +1,106 @@
+@using Core.Modules.UserManagement.ViewModels
+@model ProfileViewModel
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Profile";
+}
+
+<partial name="_AlertMessages" />
+
+<partial name="_PageHeader" model="@("Profile")" view-data='new ViewDataDictionary(ViewData) { 
+    { "PageSubtitle", "User Profile" }, 
+    { "PageIcon", "user-circle" } 
+}' />
+
+<div class="card">
+    <div class="card-header">
+        <h4>Profile</h4>
+    </div>
+    <div class="card-body profile-body">
+        <h5 class="mb-2"><i class="ti ti-user text-primary me-1"></i>Basic Information</h5>
+        
+        <form method="post" enctype="multipart/form-data" asp-action="Index">
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="Id" />
+            
+            <div class="profile-pic-upload image-field mb-4">
+                <div class="profile-pic p-2">
+                    @if (!string.IsNullOrEmpty(Model.CurrentPhotoUrl))
+                    {
+                        <img src="~/images/users/@Model.CurrentPhotoUrl" class="object-fit-cover h-100 rounded-1" alt="user" id="profileImagePreview">
+                    }
+                    else
+                    {
+                        <img src="~/assets/img/profiles/avator1.jpg" class="object-fit-cover h-100 rounded-1" alt="user" id="profileImagePreview">
+                    }
+                </div>
+                <div class="mb-3">
+                    <div class="image-upload mb-0 d-inline-flex">
+                        <input type="file" asp-for="PhotoFile" accept="image/*" id="photoFileInput" onchange="previewImage(this)">
+                        <div class="btn btn-primary fs-13">Change Image</div>
+                    </div>
+                    <p class="mt-2">Upload an image below 2 MB, Accepted File format JPG, PNG</p>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-lg-6 col-sm-12">
+                    <div class="mb-3">
+                        <label class="form-label">First Name<span class="text-danger ms-1">*</span></label>
+                        <input type="text" class="form-control" asp-for="FirstName" placeholder="Enter first name">
+                        <span asp-validation-for="FirstName" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="col-lg-6 col-sm-12">
+                    <div class="mb-3">
+                        <label class="form-label">Last Name<span class="text-danger ms-1">*</span></label>
+                        <input type="text" class="form-control" asp-for="LastName" placeholder="Enter last name">
+                        <span asp-validation-for="LastName" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="col-lg-6 col-sm-12">
+                    <div class="mb-3">
+                        <label>Email<span class="text-danger ms-1">*</span></label>
+                        <input type="email" class="form-control" asp-for="Email" placeholder="Enter email">
+                        <span asp-validation-for="Email" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="col-lg-6 col-sm-12">
+                    <div class="mb-3">
+                        <label class="form-label">Phone Number<span class="text-danger ms-1">*</span></label>
+                        <input type="text" class="form-control" asp-for="PhoneNumber" placeholder="Enter phone number">
+                        <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="col-lg-6 col-sm-12">
+                    <div class="mb-3">
+                        <label class="form-label">User Name<span class="text-danger ms-1">*</span></label>
+                        <input type="text" class="form-control" asp-for="UserName" placeholder="Enter username">
+                        <span asp-validation-for="UserName" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-12 d-flex justify-content-end mt-4">
+                <a href="@Url.Action("Index", "Home")" class="btn btn-secondary me-2 shadow-none">Cancel</a>
+                <button type="submit" class="btn btn-primary shadow-none">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        function previewImage(input) {
+            if (input.files && input.files[0]) {
+                var reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('profileImagePreview').src = e.target.result;
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+    </script>
+}
+

@@ -1,4 +1,4 @@
-using Core.ViewModels.UserManagementViewModels;
+using Core.Modules.UserManagement.ViewModels;
 using Infrastructure.Entities.Users.Identity;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;

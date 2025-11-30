@@ -1,7 +1,3 @@
-using Core.Settings;
-using Infrastructure.Entities.Users.Identity;
-using Microsoft.Extensions.Configuration;
-
 namespace Web.Configurations;
 
 public static class ServiceCollectionExtensions
@@ -19,7 +15,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IBookingRepository, BookingRepository>();
 
         // Services
-        services.AddScoped<IAnalaticalService, AnalaticalService>();
+        services.AddScoped<IAnalyticalService, AnalyticalService>();
         services.AddScoped<IMemberService, MemberService>();
         services.AddScoped<ITrainerService, TrainerService>();
         services.AddScoped<ISessionService, SessionService>();
@@ -32,6 +28,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IAccountService, AccountService>();
         services.AddScoped<IEmailService, EmailService>();
         services.AddScoped<IUserManagementService, UserManagementService>();
+        services.AddScoped<IRolePermissionsService, RolePermissionsService>();
 
         return services;
     }
@@ -41,8 +38,17 @@ public static class ServiceCollectionExtensions
     {
         services.AddIdentity<ApplicationUser, IdentityRole>(opt =>
         {
-            // Identity options can be configured here if needed
-        }).AddEntityFrameworkStores<ApplicationDbContext>();
+            opt.ClaimsIdentity.RoleClaimType = ClaimTypes.Role;
+        })
+        .AddEntityFrameworkStores<ApplicationDbContext>()
+        .AddDefaultTokenProviders();
+
+        services.AddSingleton<IAuthorizationHandler, PermissionAuthorizationHandler>();
+
+        services.AddAuthorization(options =>
+        {
+            options.RegisterPermissionPolicies();
+        });
 
         return services;
     }

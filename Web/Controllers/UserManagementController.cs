@@ -1,14 +1,11 @@
-using Core.Services.Interfaces;
-using Core.ViewModels.UserManagementViewModels;
-using NToastNotify;
-
 namespace Web.Controllers;
 
-[Authorize]
+[Authorize(Roles = $"{Roles.SuperAdmin},{Roles.Admin}")]
 public class UserManagementController(IUserManagementService _userManagementService, IToastNotification _toastNotification) : Controller
 {
     #region Get Users
 
+    [RequirePermission(Permissions.UsersView)]
     public async Task<IActionResult> Index(CancellationToken cancellationToken = default)
     {
         var users = await _userManagementService.GetAllUsersAsync(cancellationToken);
@@ -36,6 +33,7 @@ public class UserManagementController(IUserManagementService _userManagementServ
 
     #region Create User
 
+    [RequirePermission(Permissions.UsersCreate)]
     public async Task<IActionResult> Create()
     {
         var roles = await _userManagementService.GetAvailableRolesAsync();
@@ -44,6 +42,7 @@ public class UserManagementController(IUserManagementService _userManagementServ
     }
 
     [HttpPost]
+    [RequirePermission(Permissions.UsersCreate)]
     public async Task<IActionResult> Create(CreateUserViewModel input, CancellationToken cancellationToken = default)
     {
         if (!ModelState.IsValid)
@@ -68,6 +67,7 @@ public class UserManagementController(IUserManagementService _userManagementServ
 
     #region Update User
 
+    [RequirePermission(Permissions.UsersEdit)]
     public async Task<IActionResult> Edit(string id, CancellationToken cancellationToken = default)
     {
         var user = await _userManagementService.GetUserByIdAsync(id, cancellationToken);
@@ -97,6 +97,7 @@ public class UserManagementController(IUserManagementService _userManagementServ
     }
 
     [HttpPost]
+    [RequirePermission(Permissions.UsersEdit)]
     public async Task<IActionResult> Edit(UpdateUserViewModel input, CancellationToken cancellationToken = default)
     {
         if (!ModelState.IsValid)
@@ -121,6 +122,7 @@ public class UserManagementController(IUserManagementService _userManagementServ
 
     #region Change Password
 
+    [RequirePermission(Permissions.UsersEdit)]
     public async Task<IActionResult> ChangePassword(string id, CancellationToken cancellationToken = default)
     {
         var user = await _userManagementService.GetUserByIdAsync(id, cancellationToken);
@@ -139,6 +141,7 @@ public class UserManagementController(IUserManagementService _userManagementServ
     }
 
     [HttpPost]
+    [RequirePermission(Permissions.UsersEdit)]
     public async Task<IActionResult> ChangePassword(ChangePasswordViewModel input, CancellationToken cancellationToken = default)
     {
         if (!ModelState.IsValid)
@@ -162,6 +165,7 @@ public class UserManagementController(IUserManagementService _userManagementServ
     #region Toggle Status
 
     [HttpPost]
+    [RequirePermission(Permissions.UsersEdit)]
     public async Task<IActionResult> ToggleStatus(string id, CancellationToken cancellationToken = default)
     {
         bool result = await _userManagementService.ToggleUserStatusAsync(id, cancellationToken);
@@ -179,6 +183,8 @@ public class UserManagementController(IUserManagementService _userManagementServ
     #region Delete User
 
     [HttpPost]
+    [Authorize(Roles = Roles.SuperAdmin)]
+    [RequirePermission(Permissions.UsersDelete)]
     public async Task<IActionResult> Delete(string id, CancellationToken cancellationToken = default)
     {
         bool result = await _userManagementService.DeleteUserAsync(id, cancellationToken);

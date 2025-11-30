@@ -1,4 +1,4 @@
-using Core.ViewModels.MembershipViewModels;
+using Core.Modules.Memberships.ViewModels;
 using Infrastructure.Entities.Attendances;
 using Infrastructure.Entities.Membership;
 using Infrastructure.Entities.Sessions;

@@ -1,8 +1,6 @@
-global using Infrastructure.Contexts;
 global using Infrastructure.Entities.Shared;
 global using Infrastructure.Entities.Enums;
-global using Infrastructure.Repositories.Interfaces;
-global using Infrastructure.Repositories.Classes;
+global using Infrastructure.Repositories;
 global using Microsoft.EntityFrameworkCore;
 global using Microsoft.EntityFrameworkCore.Metadata.Builders;
 global using Microsoft.AspNetCore.Identity;

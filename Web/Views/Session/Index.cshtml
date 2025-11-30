@@ -1,4 +1,4 @@
-﻿@using Core.ViewModels.SessionViewModels
+@using Core.Modules.Sessions.ViewModels
 @model IEnumerable<SessionViewModel>
 @{
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
@@ -78,12 +78,13 @@
 										<a asp-action="Edit" asp-route-id="@session.Id" class="btn btn-icon btn-soft-success rounded-pill" title="Edit">
 											<i data-feather="edit" class="feather-edit"></i>
 										</a>
-										<form asp-action="Delete" asp-route-id="@session.Id" method="post" class="d-inline"
-											  onsubmit="return confirm('Are you sure you want to delete this session?');">
-											<button type="submit" class="btn btn-icon btn-soft-danger rounded-pill" title="Delete">
+										<button type="button" 
+												class="btn btn-icon btn-soft-danger rounded-pill" 
+												title="Delete"
+												data-bs-toggle="modal" 
+												data-bs-target="#deleteModal_@session.Id">
 												<i data-feather="trash-2" class="feather-trash-2"></i>
 											</button>
-										</form>
 									</div>
 								</td>
 							</tr>
@@ -97,6 +98,21 @@
 else
 {
 	<partial name="_EmptyState" />
+}
+
+@foreach (var session in Model)
+{
+	var modalId = "deleteModal_" + session.Id;
+	var message = "Are you sure you want to delete the session '" + session.CategoryName + "'? This action cannot be undone.";
+	
+	var deleteModalViewData = new ViewDataDictionary(ViewData);
+	deleteModalViewData["DeleteUrl"] = Url.Action("Delete", "Session");
+	deleteModalViewData["ModalId"] = modalId;
+	deleteModalViewData["Title"] = "Delete Session";
+	deleteModalViewData["Message"] = message;
+	deleteModalViewData["EntityId"] = session.Id;
+	
+	<partial name="_DeleteModal" view-data="deleteModalViewData" />
 }
 
 @section Scripts {

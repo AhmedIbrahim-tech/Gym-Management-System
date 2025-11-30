@@ -1,3 +1,5 @@
+using Infrastructure.Data;
+
 namespace Web.Configurations;
 
 public static class DatabaseServiceExtensions

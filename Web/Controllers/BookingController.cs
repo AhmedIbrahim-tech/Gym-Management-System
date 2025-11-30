@@ -1,10 +1,11 @@
-﻿namespace Web.Controllers;
+namespace Web.Controllers;
 
-[Authorize]
+[Authorize(Roles = $"{Roles.SuperAdmin},{Roles.Admin},{Roles.Trainer},{Roles.Member}")]
 public class BookingController(IBookingService _bookingService, IToastNotification _toastNotification) : Controller
 {
     #region Get Bookings
 
+    [RequirePermission(Permissions.BookingsView)]
     public async Task<IActionResult> Index(CancellationToken cancellationToken = default)
     {
         var bookings = await _bookingService.GetAllSessionsAsync(cancellationToken);
@@ -25,12 +26,14 @@ public class BookingController(IBookingService _bookingService, IToastNotificati
 
     #region Get Members For Session
 
+    [RequirePermission(Permissions.BookingsView)]
     public async Task<IActionResult> GetMembersForUpcomingSession(int id, CancellationToken cancellationToken = default)
     {
         var members = await _bookingService.GetMembersForUpcomingBySessionIdAsync(id, cancellationToken);
         return View(members);
     }
 
+    [RequirePermission(Permissions.BookingsView)]
     public async Task<IActionResult> GetMembersForOngoingSessions(int id, CancellationToken cancellationToken = default)
     {
         var members = await _bookingService.GetMembersForOngoingBySessionIdAsync(id, cancellationToken);
@@ -41,6 +44,7 @@ public class BookingController(IBookingService _bookingService, IToastNotificati
 
     #region Create Booking
 
+    [RequirePermission(Permissions.BookingsCreate)]
     public async Task<IActionResult> Create(int id, CancellationToken cancellationToken = default)
     {
         var members = await _bookingService.GetMembersForDropDownAsync(id, cancellationToken);
@@ -49,6 +53,7 @@ public class BookingController(IBookingService _bookingService, IToastNotificati
     }
 
     [HttpPost]
+    [RequirePermission(Permissions.BookingsCreate)]
     public async Task<IActionResult> Create(CreateBookingViewModel createdBooking, CancellationToken cancellationToken = default)
     {
         var result = await _bookingService.CreateNewBookingAsync(createdBooking, cancellationToken);
@@ -69,6 +74,7 @@ public class BookingController(IBookingService _bookingService, IToastNotificati
     #region Cancel Booking
 
     [HttpPost]
+    [RequirePermission(Permissions.BookingsDelete)]
     public async Task<IActionResult> Cancel(int memberId, int sessionId, CancellationToken cancellationToken = default)
     {
         var result = await _bookingService.CancelBookingAsync(memberId, sessionId, cancellationToken);
@@ -89,6 +95,7 @@ public class BookingController(IBookingService _bookingService, IToastNotificati
     #region Mark Attendance
 
     [HttpPost]
+    [RequirePermission(Permissions.BookingsMarkAttendance)]
     public async Task<IActionResult> Attended(int memberId, int sessionId, CancellationToken cancellationToken = default)
     {
         await _bookingService.MemberAttendedAsync(memberId, sessionId, cancellationToken);

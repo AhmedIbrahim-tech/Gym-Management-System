@@ -1,3 +1,4 @@
+using Infrastructure.Data;
 using Infrastructure.Entities.Users.Identity;
 
 namespace Web.Configurations;

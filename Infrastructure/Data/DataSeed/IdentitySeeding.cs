@@ -1,15 +1,11 @@
-﻿using Infrastructure.Entities.Users.Identity;
-using Microsoft.EntityFrameworkCore;
+﻿using System.Security.Claims;
+using Infrastructure.Constants;
 
 namespace Infrastructure.Data.DataSeed;
 
 public static class IdentitySeeding
 {
     private const string DefaultPassword = "P@ssw0rd";
-    private const string SuperAdminRole = "SuperAdmin";
-    private const string AdminRole = "Admin";
-    private const string MemberRole = "Member";
-    private const string TrainerRole = "Trainer";
 
     public static async Task<bool> SeedDataAsync(
         UserManager<ApplicationUser> userManager,
@@ -18,6 +14,7 @@ public static class IdentitySeeding
         try
         {
             await SeedRolesAsync(roleManager);
+            await SeedRolePermissionsAsync(roleManager);
             await SeedUsersAsync(userManager);
 
             return true;
@@ -30,7 +27,7 @@ public static class IdentitySeeding
 
     private static async Task SeedRolesAsync(RoleManager<IdentityRole> roleManager)
     {
-        var roles = new[] { SuperAdminRole, AdminRole, MemberRole, TrainerRole };
+        var roles = Roles.GetAllRoles();
 
         foreach (var roleName in roles)
         {
@@ -38,6 +35,92 @@ public static class IdentitySeeding
             {
                 var role = new IdentityRole { Name = roleName };
                 await roleManager.CreateAsync(role);
+            }
+        }
+    }
+
+    private static async Task SeedRolePermissionsAsync(RoleManager<IdentityRole> roleManager)
+    {
+        // SuperAdmin - All permissions
+        var superAdminRole = await roleManager.FindByNameAsync(Roles.SuperAdmin);
+        if (superAdminRole != null)
+        {
+            var existingClaims = await roleManager.GetClaimsAsync(superAdminRole);
+            if (!existingClaims.Any(c => c.Type == PermissionConstants.PermissionClaimType))
+            {
+                var allPermissions = Permissions.GetAllPermissions();
+                foreach (var permission in allPermissions)
+                {
+                    await roleManager.AddClaimAsync(superAdminRole, new Claim(PermissionConstants.PermissionClaimType, permission));
+                }
+            }
+        }
+
+        // Admin - Most permissions except roles management
+        var adminRole = await roleManager.FindByNameAsync(Roles.Admin);
+        if (adminRole != null)
+        {
+            var existingClaims = await roleManager.GetClaimsAsync(adminRole);
+            if (!existingClaims.Any(c => c.Type == PermissionConstants.PermissionClaimType))
+            {
+                var adminPermissions = new List<string>
+                {
+                    Permissions.UsersView, Permissions.UsersCreate, Permissions.UsersEdit, Permissions.UsersDelete,
+                    Permissions.MembersView, Permissions.MembersCreate, Permissions.MembersEdit, Permissions.MembersDelete,
+                    Permissions.TrainersView, Permissions.TrainersCreate, Permissions.TrainersEdit, Permissions.TrainersDelete,
+                    Permissions.PlansView, Permissions.PlansCreate, Permissions.PlansEdit, Permissions.PlansDelete,
+                    Permissions.MembershipsView, Permissions.MembershipsCreate, Permissions.MembershipsEdit, Permissions.MembershipsDelete,
+                    Permissions.SessionsView, Permissions.SessionsCreate, Permissions.SessionsEdit, Permissions.SessionsDelete,
+                    Permissions.BookingsView, Permissions.BookingsCreate, Permissions.BookingsEdit, Permissions.BookingsDelete, Permissions.BookingsMarkAttendance,
+                    Permissions.DashboardView, Permissions.AnalyticsView
+                };
+                foreach (var permission in adminPermissions)
+                {
+                    await roleManager.AddClaimAsync(adminRole, new Claim(PermissionConstants.PermissionClaimType, permission));
+                }
+            }
+        }
+
+        // Trainer - Limited permissions
+        var trainerRole = await roleManager.FindByNameAsync(Roles.Trainer);
+        if (trainerRole != null)
+        {
+            var existingClaims = await roleManager.GetClaimsAsync(trainerRole);
+            if (!existingClaims.Any(c => c.Type == PermissionConstants.PermissionClaimType))
+            {
+                var trainerPermissions = new List<string>
+                {
+                    Permissions.MembersView,
+                    Permissions.SessionsView, Permissions.SessionsCreate, Permissions.SessionsEdit,
+                    Permissions.BookingsView, Permissions.BookingsCreate, Permissions.BookingsEdit, Permissions.BookingsDelete, Permissions.BookingsMarkAttendance,
+                    Permissions.MembershipsView,
+                    Permissions.DashboardView
+                };
+                foreach (var permission in trainerPermissions)
+                {
+                    await roleManager.AddClaimAsync(trainerRole, new Claim(PermissionConstants.PermissionClaimType, permission));
+                }
+            }
+        }
+
+        // Member - Very limited permissions
+        var memberRole = await roleManager.FindByNameAsync(Roles.Member);
+        if (memberRole != null)
+        {
+            var existingClaims = await roleManager.GetClaimsAsync(memberRole);
+            if (!existingClaims.Any(c => c.Type == PermissionConstants.PermissionClaimType))
+            {
+                var memberPermissions = new List<string>
+                {
+                    Permissions.BookingsView, Permissions.BookingsCreate, Permissions.BookingsDelete,
+                    Permissions.SessionsView,
+                    Permissions.MembershipsView,
+                    Permissions.DashboardView
+                };
+                foreach (var permission in memberPermissions)
+                {
+                    await roleManager.AddClaimAsync(memberRole, new Claim(PermissionConstants.PermissionClaimType, permission));
+                }
             }
         }
     }
@@ -58,7 +141,7 @@ public static class IdentitySeeding
                 UserName = "SuperAdmin",
                 Email = "superadmin@vitagym.com",
                 PhoneNumber = "1234567890",
-                Role = SuperAdminRole
+                Role = Roles.SuperAdmin
             },
             new UserSeedData
             {
@@ -67,7 +150,7 @@ public static class IdentitySeeding
                 UserName = "Admin",
                 Email = "admin@vitagym.com",
                 PhoneNumber = "1234567891",
-                Role = AdminRole
+                Role = Roles.Admin
             }
         };
 

@@ -1,12 +1,11 @@
-﻿using Core.ViewModels.MembershipViewModels;
-
 namespace Web.Controllers;
 
-[Authorize]
+[Authorize(Roles = $"{Roles.SuperAdmin},{Roles.Admin},{Roles.Trainer}")]
 public class MembershipController(IMembershipService _membershipService, IToastNotification _toastNotification) : Controller
 {
     #region Get Memberships
 
+    [RequirePermission(Permissions.MembershipsView)]
     public async Task<IActionResult> Index(CancellationToken cancellationToken = default)
     {
         var memberships = await _membershipService.GetAllMemberShipsAsync(cancellationToken);
@@ -33,6 +32,7 @@ public class MembershipController(IMembershipService _membershipService, IToastN
 
     #region Create Membership
 
+    [RequirePermission(Permissions.MembershipsCreate)]
     public async Task<IActionResult> Create(CancellationToken cancellationToken = default)
     {
         var viewModel = await BuildCreateViewModelAsync(cancellationToken);
@@ -40,6 +40,7 @@ public class MembershipController(IMembershipService _membershipService, IToastN
     }
 
     [HttpPost]
+    [RequirePermission(Permissions.MembershipsCreate)]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(CreateMembershipViewModel model, CancellationToken cancellationToken = default)
     {
@@ -81,6 +82,7 @@ public class MembershipController(IMembershipService _membershipService, IToastN
     #region Cancel Membership
 
     [HttpPost]
+    [RequirePermission(Permissions.MembershipsDelete)]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Cancel(int id, CancellationToken cancellationToken = default)
     {

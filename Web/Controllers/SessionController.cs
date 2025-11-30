@@ -1,10 +1,11 @@
-﻿namespace Web.Controllers;
+namespace Web.Controllers;
 
-[Authorize]
+[Authorize(Roles = $"{Roles.SuperAdmin},{Roles.Admin},{Roles.Trainer}")]
 public class SessionController(ISessionService _sessionService, IToastNotification _toastNotification) : Controller
 {
     #region Get Sessions
 
+    [RequirePermission(Permissions.SessionsView)]
     public async Task<IActionResult> Index(CancellationToken cancellationToken = default)
     {
         var sessions = await _sessionService.GetAllSessionsAsync(cancellationToken);
@@ -21,6 +22,7 @@ public class SessionController(ISessionService _sessionService, IToastNotificati
         return View(sessions);
     }
 
+    [RequirePermission(Permissions.SessionsView)]
     public async Task<IActionResult> Details(int id, CancellationToken cancellationToken = default)
     {
         var session = await _sessionService.GetSessionByIDAsync(id, cancellationToken);
@@ -36,6 +38,7 @@ public class SessionController(ISessionService _sessionService, IToastNotificati
 
     #region Create Session
 
+    [RequirePermission(Permissions.SessionsCreate)]
     public async Task<IActionResult> Create(CancellationToken cancellationToken = default)
     {
         await LoadCategoriesDropDownAsync(cancellationToken);
@@ -44,6 +47,7 @@ public class SessionController(ISessionService _sessionService, IToastNotificati
     }
 
     [HttpPost]
+    [RequirePermission(Permissions.SessionsCreate)]
     public async Task<IActionResult> Create(CreateSessionViewModel input, CancellationToken cancellationToken = default)
     {
         if (!ModelState.IsValid)
@@ -72,6 +76,7 @@ public class SessionController(ISessionService _sessionService, IToastNotificati
 
     #region Update Session
 
+    [RequirePermission(Permissions.SessionsEdit)]
     public async Task<IActionResult> Edit(int id, CancellationToken cancellationToken = default)
     {
         if (id <= 0)
@@ -92,6 +97,7 @@ public class SessionController(ISessionService _sessionService, IToastNotificati
     }
 
     [HttpPost]
+    [RequirePermission(Permissions.SessionsEdit)]
     public async Task<IActionResult> Edit([FromRoute] int id, UpdateSessionViewModel input, CancellationToken cancellationToken = default)
     {
         if (!ModelState.IsValid)
@@ -114,27 +120,10 @@ public class SessionController(ISessionService _sessionService, IToastNotificati
 
     #region Delete Session
 
-    public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken = default)
-    {
-        if (id <= 0)
-        {
-            _toastNotification.AddErrorToastMessage("ID cannot be Null or Negative!");
-            return RedirectToAction(nameof(Index));
-        }
-
-        var session = await _sessionService.GetSessionByIDAsync(id, cancellationToken);
-        if (session == null)
-        {
-            _toastNotification.AddErrorToastMessage("Session is Not Found!");
-            return RedirectToAction(nameof(Index));
-        }
-
-        ViewBag.SessionId = id;
-        return View();
-    }
-
     [HttpPost]
-    public async Task<IActionResult> DeleteConfirmed([FromForm] int id, CancellationToken cancellationToken = default)
+    [Authorize(Roles = $"{Roles.SuperAdmin},{Roles.Admin}")]
+    [RequirePermission(Permissions.SessionsDelete)]
+    public async Task<IActionResult> Delete([FromForm] int id, CancellationToken cancellationToken = default)
     {
         var result = await _sessionService.RemoveSessionAsync(id, cancellationToken);
 

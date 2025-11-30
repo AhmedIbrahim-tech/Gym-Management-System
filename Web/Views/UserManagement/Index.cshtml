@@ -1,4 +1,4 @@
-@using Core.ViewModels.UserManagementViewModels
+@using Core.Modules.UserManagement.ViewModels
 @model IEnumerable<UserListViewModel>
 
 <partial name="_AlertMessages" />
@@ -82,12 +82,13 @@
 												<i data-feather="@(user.IsActive ? "x-circle" : "check-circle")" class="feather-edit"></i>
 											</button>
 										</form>
-										<form asp-controller="UserManagement" asp-action="Delete" asp-route-id="@user.Id" method="post" class="d-inline"
-											  onsubmit="return confirm('Are you sure you want to delete this user?');">
-											<button type="submit" class="btn btn-icon btn-soft-danger rounded-pill" title="Delete">
-												<i data-feather="trash-2" class="feather-trash-2"></i>
-											</button>
-										</form>
+										<button type="button" 
+												class="btn btn-icon btn-soft-danger rounded-pill" 
+												title="Delete"
+												data-bs-toggle="modal" 
+												data-bs-target="#deleteModal_@user.Id">
+											<i data-feather="trash-2" class="feather-trash-2"></i>
+										</button>
 									</div>
 								</td>
 							</tr>
@@ -101,6 +102,20 @@
 else
 {
 	<partial name="_EmptyState" />
+}
+
+@foreach (var user in Model)
+{
+	var modalId = "deleteModal_" + user.Id;
+	var message = "Are you sure you want to delete the user '" + user.FullName + "'? This action cannot be undone.";
+	
+	var deleteModalViewData = new ViewDataDictionary(ViewData);
+	deleteModalViewData["DeleteUrl"] = Url.Action("Delete", "UserManagement", new { id = user.Id });
+	deleteModalViewData["ModalId"] = modalId;
+	deleteModalViewData["Title"] = "Delete User";
+	deleteModalViewData["Message"] = message;
+	
+	<partial name="_DeleteModal" view-data="deleteModalViewData" />
 }
 
 @section Scripts {

@@ -1,13 +1,14 @@
-﻿namespace Web.Controllers;
+namespace Web.Controllers;
 
-[Authorize]
-public class HomeController(IAnalaticalService _analaticalService) : Controller
+[Authorize(Roles = $"{Roles.SuperAdmin},{Roles.Admin},{Roles.Trainer},{Roles.Member}")]
+public class HomeController(IAnalyticalService _analyticalService) : Controller
 {
     #region Dashboard
 
+    [RequirePermission(Permissions.DashboardView)]
     public async Task<IActionResult> Index(CancellationToken cancellationToken = default)
     {
-        var model = await _analaticalService.GetAnalaticalDataAsync(cancellationToken);
+        var model = await _analyticalService.GetAnalyticalDataAsync(cancellationToken);
         return View(model);
     }
 

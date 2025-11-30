@@ -1,13 +1,22 @@
-﻿namespace Web.Controllers;
+using Infrastructure.Entities.Users.Identity;
+using Microsoft.AspNetCore.Identity;
 
-[Authorize]
-public class MemberController(IMemberService _memberService, IToastNotification _toastNotification) : Controller
+namespace Web.Controllers;
+
+[Authorize(Roles = $"{Roles.SuperAdmin},{Roles.Admin},{Roles.Trainer},{Roles.Member}")]
+public class MemberController(
+    IMemberService _memberService, 
+    IToastNotification _toastNotification,
+    UserManager<ApplicationUser> _userManager) : Controller
 {
     #region Get Members
 
+    [RequirePermission(Permissions.MembersView)]
     public async Task<IActionResult> Index(CancellationToken cancellationToken = default)
     {
-        var members = await _memberService.GetAllMembersAsync(cancellationToken);
+        var currentUser = await _userManager.GetUserAsync(User);
+        var currentUserId = currentUser?.Id;
+        var members = await _memberService.GetAllMembersAsync(currentUserId, cancellationToken);
 
         ViewData["Title"] = "Members";
         ViewData["PageTitle"] = "Members List";
@@ -28,9 +37,12 @@ public class MemberController(IMemberService _memberService, IToastNotification 
         return View(members);
     }
 
+    [RequirePermission(Permissions.MembersView)]
     public async Task<IActionResult> MemberDetails(int id, CancellationToken cancellationToken = default)
     {
-        var member = await _memberService.GetMemberDetailsAsync(id, cancellationToken);
+        var currentUser = await _userManager.GetUserAsync(User);
+        var currentUserId = currentUser?.Id;
+        var member = await _memberService.GetMemberDetailsAsync(id, currentUserId, cancellationToken);
         if (member == null)
         {
             _toastNotification.AddErrorToastMessage("Member Not Found!");
@@ -39,6 +51,7 @@ public class MemberController(IMemberService _memberService, IToastNotification 
         return View(member);
     }
 
+    [RequirePermission(Permissions.MembersView)]
     public async Task<IActionResult> HealthRecordDetails(int id, CancellationToken cancellationToken = default)
     {
         var healthRecord = await _memberService.GetMemberHealthRecordAsync(id, cancellationToken);
@@ -54,12 +67,14 @@ public class MemberController(IMemberService _memberService, IToastNotification 
 
     #region Create Member
 
+    [RequirePermission(Permissions.MembersCreate)]
     public IActionResult Create()
     {
         return View();
     }
 
     [HttpPost]
+    [RequirePermission(Permissions.MembersCreate)]
     public async Task<IActionResult> CreateMember(CreateMemberViewModel input, CancellationToken cancellationToken = default)
     {
         if (!ModelState.IsValid)
@@ -89,6 +104,7 @@ public class MemberController(IMemberService _memberService, IToastNotification 
 
     #region Update Member
 
+    [RequirePermission(Permissions.MembersEdit)]
     public async Task<IActionResult> MemberEdit(int id, CancellationToken cancellationToken = default)
     {
         var member = await _memberService.GetMemberToUpdateAsync(id, cancellationToken);
@@ -102,6 +118,7 @@ public class MemberController(IMemberService _memberService, IToastNotification 
     }
 
     [HttpPost]
+    [RequirePermission(Permissions.MembersEdit)]
     public async Task<IActionResult> MemberEdit([FromRoute] int id, MemberToUpdateViewModel input, CancellationToken cancellationToken = default)
     {
         if (!ModelState.IsValid)
@@ -124,6 +141,7 @@ public class MemberController(IMemberService _memberService, IToastNotification 
     #region Toggle Status
 
     [HttpPost]
+    [RequirePermission(Permissions.MembersEdit)]
     public async Task<IActionResult> ToggleStatus(int id, CancellationToken cancellationToken = default)
     {
         bool result = await _memberService.ToggleMemberStatusAsync(id, cancellationToken);
@@ -140,27 +158,10 @@ public class MemberController(IMemberService _memberService, IToastNotification 
 
     #region Delete Member
 
-    public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken = default)
-    {
-        if (id <= 0)
-        {
-            _toastNotification.AddErrorToastMessage("ID cannot be Null or Negative!");
-            return RedirectToAction(nameof(Index));
-        }
-
-        var member = await _memberService.GetMemberDetailsAsync(id, cancellationToken);
-        if (member == null)
-        {
-            _toastNotification.AddErrorToastMessage("Member Not Found!");
-            return RedirectToAction(nameof(Index));
-        }
-
-        ViewBag.MemberId = id;
-        return View();
-    }
-
     [HttpPost]
-    public async Task<IActionResult> DeleteConfirmed([FromForm] int id, CancellationToken cancellationToken = default)
+    [Authorize(Roles = $"{Roles.SuperAdmin},{Roles.Admin}")]
+    [RequirePermission(Permissions.MembersDelete)]
+    public async Task<IActionResult> Delete([FromForm] int id, CancellationToken cancellationToken = default)
     {
         var result = await _memberService.RemoveMemberAsync(id, cancellationToken);
 

@@ -1,4 +1,5 @@
-﻿using Infrastructure.Entities.Users.Identity;
+using Core.Modules.Accounts; using Core.Modules.Attendances; using Core.Modules.Bookings; using Core.Modules.Memberships; using Core.Modules.Payments; using Core.Modules.Plans; using Core.Modules.Sessions; using Core.Modules.Trainers; using Core.Modules.UserManagement; using Core.Modules.Analyticals; using Core.Modules.Members;
+using Infrastructure.Entities.Users.Identity;
 
 namespace Web.Controllers;
 

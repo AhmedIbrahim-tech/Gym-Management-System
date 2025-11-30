@@ -195,6 +195,7 @@
 				</a>
 				<div class="dropdown-menu menu-drop-user">
 					@await Component.InvokeAsync("UserInfo")
+					<a class="dropdown-item" href="@Url.Action("Index", "Profile")"><i class="ti ti-user-circle me-2"></i>My Profile</a>
 					<hr class="my-2">
 					<form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
 						<button type="submit" class="dropdown-item logout pb-0" style="border: none; background: none; width: 100%; text-align: left;">
@@ -226,6 +227,7 @@
 						<small class="text-muted">@userRole</small>
 					</div>
 				</div>
+				<a class="dropdown-item" href="@Url.Action("Index", "Profile")"><i class="ti ti-user-circle me-2"></i>My Profile</a>
 				<hr class="my-2">
 				<form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
 					<button type="submit" class="dropdown-item" style="border: none; background: none; width: 100%; text-align: left;">

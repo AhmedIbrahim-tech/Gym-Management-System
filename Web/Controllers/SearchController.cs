@@ -1,9 +1,9 @@
-using Core.Services.Interfaces;
-using Microsoft.AspNetCore.Mvc;
+using Infrastructure.Entities.Users.Identity;
+using Microsoft.AspNetCore.Identity;
 
 namespace Web.Controllers;
 
-[Authorize]
+[Authorize(Roles = $"{Roles.SuperAdmin},{Roles.Admin},{Roles.Trainer}")]
 public class SearchController : Controller
 {
     private readonly IMemberService _memberService;
@@ -12,6 +12,7 @@ public class SearchController : Controller
     private readonly IMembershipService _membershipService;
     private readonly IUserManagementService _userManagementService;
     private readonly IPlanService _planService;
+    private readonly UserManager<ApplicationUser> _userManager;
 
     public SearchController(
         IMemberService memberService,
@@ -19,7 +20,8 @@ public class SearchController : Controller
         ISessionService sessionService,
         IMembershipService membershipService,
         IUserManagementService userManagementService,
-        IPlanService planService)
+        IPlanService planService,
+        UserManager<ApplicationUser> userManager)
     {
         _memberService = memberService;
         _trainerService = trainerService;
@@ -27,6 +29,7 @@ public class SearchController : Controller
         _membershipService = membershipService;
         _userManagementService = userManagementService;
         _planService = planService;
+        _userManager = userManager;
     }
 
     [HttpGet]
@@ -57,7 +60,9 @@ public class SearchController : Controller
 
     private async Task<object[]> SearchMembersAsync(string query, CancellationToken cancellationToken)
     {
-        var members = await _memberService.GetAllMembersAsync(cancellationToken);
+        var currentUser = await _userManager.GetUserAsync(User);
+        var currentUserId = currentUser?.Id;
+        var members = await _memberService.GetAllMembersAsync(currentUserId, cancellationToken);
         var searchTerm = query.ToLower();
 
         return members

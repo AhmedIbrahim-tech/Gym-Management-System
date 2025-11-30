@@ -1,4 +1,4 @@
-@using Core.ViewModels.RoleViewModels
+@using Core.Modules.UserManagement.RoleViewModels
 @model IEnumerable<RoleViewModel>
 
 <partial name="_AlertMessages" />
@@ -19,10 +19,11 @@
 									<span class="checkmarks"></span>
 								</label>
 							</th>
-							<th>Role</th>
-							<th>Created Date</th>
+							<th>Role Name</th>
+							<th class="d-none d-md-table-cell">Users</th>
+							<th class="d-none d-lg-table-cell">Created Date</th>
 							<th>Status</th>
-							<th class="no-sort"></th>
+							<th class="no-sort">Actions</th>
 						</tr>
 					</thead>
 					<tbody>
@@ -35,8 +36,28 @@
 										<span class="checkmarks"></span>
 									</label>
 								</td>
-								<td>@role.Name</td>
-								<td>@role.CreatedDate.ToString("dd MMM yyyy")</td>
+								<td>
+									<div class="d-flex align-items-center">
+										<div class="avatar avatar-sm me-2">
+											<div class="avatar-inner bg-primary-subtle text-primary rounded-circle d-flex align-items-center justify-content-center">
+												<i data-feather="shield" class="feather-sm"></i>
+											</div>
+										</div>
+										<div>
+											<a asp-action="Details" asp-route-id="@role.Id" class="text-body fw-semibold">@role.Name</a>
+											@if (role.Name == Roles.SuperAdmin)
+											{
+												<span class="badge bg-danger-subtle text-danger ms-2">Protected</span>
+											}
+										</div>
+									</div>
+								</td>
+								<td class="d-none d-md-table-cell">
+									<span class="badge bg-info-subtle text-info">
+										<i data-feather="users" class="feather-sm me-1"></i>@role.UsersCount
+									</span>
+								</td>
+								<td class="d-none d-lg-table-cell">@role.CreatedDate.ToString("dd MMM yyyy")</td>
 								<td>
 									@if (role.IsActive)
 									{
@@ -53,23 +74,42 @@
 								</td>
 								<td class="action-table-data">
 									<div class="edit-delete-action">
-										<a asp-action="Permissions" asp-route-id="@role.Id" class="btn btn-icon btn-soft-info rounded-pill" title="Permissions">
-											<i data-feather="shield" class="feather-edit"></i>
+										<a asp-action="ManagePermissions" asp-route-id="@role.Id" class="btn btn-icon btn-soft-info rounded-pill" title="Manage Permissions">
+											<i data-feather="shield-check" class="feather-sm"></i>
 										</a>
-										<a asp-action="Edit" asp-route-id="@role.Id" class="btn btn-icon btn-soft-success rounded-pill" title="Edit">
-											<i data-feather="edit" class="feather-edit"></i>
+										<a asp-action="Details" asp-route-id="@role.Id" class="btn btn-icon btn-soft-primary rounded-pill" title="View Details">
+											<i data-feather="eye" class="feather-sm"></i>
 										</a>
-										<form asp-action="ToggleStatus" asp-route-id="@role.Id" method="post" class="d-inline">
-											<button type="submit" class="btn btn-icon @(role.IsActive ? "btn-soft-info" : "btn-soft-success") rounded-pill" title="@(role.IsActive ? "Deactivate" : "Activate")">
-												<i data-feather="@(role.IsActive ? "x-circle" : "check-circle")" class="feather-edit"></i>
+										@if (role.CanEdit)
+										{
+											<a asp-action="Edit" asp-route-id="@role.Id" class="btn btn-icon btn-soft-success rounded-pill" title="Edit">
+												<i data-feather="edit" class="feather-sm"></i>
+											</a>
+										}
+										else
+										{
+											<button type="button" class="btn btn-icon btn-soft-secondary rounded-pill" title="Cannot edit protected role" disabled>
+												<i data-feather="edit" class="feather-sm"></i>
 											</button>
-										</form>
-										<form asp-action="Delete" asp-route-id="@role.Id" method="post" class="d-inline"
-											  onsubmit="return confirm('Are you sure you want to delete this role?');">
-											<button type="submit" class="btn btn-icon btn-soft-danger rounded-pill" title="Delete">
-												<i data-feather="trash-2" class="feather-trash-2"></i>
+										}
+										@if (role.CanDelete)
+										{
+											<button type="button" 
+													class="btn btn-icon btn-soft-danger rounded-pill" 
+													title="Delete"
+													data-bs-toggle="modal" 
+													data-bs-target="#deleteModal_@role.Id">
+												<i data-feather="trash-2" class="feather-sm"></i>
 											</button>
-										</form>
+										}
+										else
+										{
+											<button type="button" class="btn btn-icon btn-soft-secondary rounded-pill" 
+													title="@(role.Name == Roles.SuperAdmin ? "Cannot delete protected role" : $"Cannot delete role with {role.UsersCount} user(s)")" 
+													disabled>
+												<i data-feather="trash-2" class="feather-sm"></i>
+											</button>
+										}
 									</div>
 								</td>
 							</tr>
@@ -83,6 +123,20 @@
 else
 {
 	<partial name="_EmptyState" />
+}
+
+@foreach (var role in Model.Where(r => r.CanDelete))
+{
+	var modalId = "deleteModal_" + role.Id;
+	var message = "Are you sure you want to delete the role '" + role.Name + "'? This action cannot be undone.";
+	
+	var deleteModalViewData = new ViewDataDictionary(ViewData);
+	deleteModalViewData["DeleteUrl"] = Url.Action("Delete", "RolesPermissions", new { id = role.Id });
+	deleteModalViewData["ModalId"] = modalId;
+	deleteModalViewData["Title"] = "Delete Role";
+	deleteModalViewData["Message"] = message;
+	
+	<partial name="_DeleteModal" view-data="deleteModalViewData" />
 }
 
 @section Scripts {

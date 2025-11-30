@@ -1,10 +1,11 @@
-﻿namespace Web.Controllers;
+namespace Web.Controllers;
 
-[Authorize(Roles = "SuperAdmin")]
+[Authorize(Roles = $"{Roles.SuperAdmin},{Roles.Admin}")]
 public class PlanController(IPlanService _planService, IToastNotification _toastNotification) : Controller
 {
     #region Get Plans
 
+    [RequirePermission(Permissions.PlansView)]
     public async Task<IActionResult> Index(CancellationToken cancellationToken = default)
     {
         var plans = await _planService.GetAllPlansAsync(cancellationToken);
@@ -21,6 +22,7 @@ public class PlanController(IPlanService _planService, IToastNotification _toast
         return View(plans);
     }
 
+    [RequirePermission(Permissions.PlansView)]
     public async Task<IActionResult> Details(int id, CancellationToken cancellationToken = default)
     {
         if (id <= 0)
@@ -43,6 +45,7 @@ public class PlanController(IPlanService _planService, IToastNotification _toast
 
     #region Update Plan
 
+    [RequirePermission(Permissions.PlansEdit)]
     public async Task<IActionResult> Edit(int id, CancellationToken cancellationToken = default)
     {
         var plan = await _planService.GetPlanToUpdateAsync(id, cancellationToken);
@@ -56,6 +59,7 @@ public class PlanController(IPlanService _planService, IToastNotification _toast
     }
 
     [HttpPost]
+    [RequirePermission(Permissions.PlansEdit)]
     public async Task<IActionResult> Edit([FromRoute] int id, UpdatePlanViewModel input, CancellationToken cancellationToken = default)
     {
         if (!ModelState.IsValid)
@@ -78,6 +82,7 @@ public class PlanController(IPlanService _planService, IToastNotification _toast
     #region Toggle Status
 
     [HttpPost]
+    [RequirePermission(Permissions.PlansEdit)]
     public async Task<IActionResult> ToggleStatus(int id, CancellationToken cancellationToken = default)
     {
         if (id <= 0)

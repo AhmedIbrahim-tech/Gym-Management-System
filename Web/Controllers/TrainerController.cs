@@ -1,10 +1,11 @@
-﻿namespace Web.Controllers;
+namespace Web.Controllers;
 
-[Authorize(Roles = "SuperAdmin")]
+[Authorize(Roles = $"{Roles.SuperAdmin},{Roles.Admin}")]
 public class TrainerController(ITrainerService _trainerService, IToastNotification _toastNotification) : Controller
 {
     #region Get Trainers
 
+    [RequirePermission(Permissions.TrainersView)]
     public async Task<IActionResult> Index(CancellationToken cancellationToken = default)
     {
         var trainers = await _trainerService.GetAllTrainersAsync(cancellationToken);
@@ -27,6 +28,7 @@ public class TrainerController(ITrainerService _trainerService, IToastNotificati
         return View(trainers);
     }
 
+    [RequirePermission(Permissions.TrainersView)]
     public async Task<IActionResult> TrainerDetails(int id, CancellationToken cancellationToken = default)
     {
         var trainer = await _trainerService.GetTrainerDetailsAsync(id, cancellationToken);
@@ -42,12 +44,14 @@ public class TrainerController(ITrainerService _trainerService, IToastNotificati
 
     #region Create Trainer
 
+    [RequirePermission(Permissions.TrainersCreate)]
     public IActionResult Create()
     {
         return View();
     }
 
     [HttpPost]
+    [RequirePermission(Permissions.TrainersCreate)]
     public async Task<IActionResult> CreateTrainer(CreateTrainerViewModel input, CancellationToken cancellationToken = default)
     {
         if (!ModelState.IsValid)
@@ -70,6 +74,7 @@ public class TrainerController(ITrainerService _trainerService, IToastNotificati
 
     #region Update Trainer
 
+    [RequirePermission(Permissions.TrainersEdit)]
     public async Task<IActionResult> TrainerEdit(int id, CancellationToken cancellationToken = default)
     {
         var trainer = await _trainerService.GetTrainerToUpdateAsync(id, cancellationToken);
@@ -83,6 +88,7 @@ public class TrainerController(ITrainerService _trainerService, IToastNotificati
     }
 
     [HttpPost]
+    [RequirePermission(Permissions.TrainersEdit)]
     public async Task<IActionResult> TrainerEdit([FromRoute] int id, TrainerToUpdateViewModel input, CancellationToken cancellationToken = default)
     {
         if (!ModelState.IsValid)
@@ -104,27 +110,10 @@ public class TrainerController(ITrainerService _trainerService, IToastNotificati
 
     #region Delete Trainer
 
-    public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken = default)
-    {
-        if (id <= 0)
-        {
-            _toastNotification.AddErrorToastMessage("ID cannot be Null or Negative!");
-            return RedirectToAction(nameof(Index));
-        }
-
-        var trainer = await _trainerService.GetTrainerDetailsAsync(id, cancellationToken);
-        if (trainer == null)
-        {
-            _toastNotification.AddErrorToastMessage("Trainer Not Found!");
-            return RedirectToAction(nameof(Index));
-        }
-
-        ViewBag.TrainerId = id;
-        return View();
-    }
-
     [HttpPost]
-    public async Task<IActionResult> DeleteConfirmed([FromForm] int id, CancellationToken cancellationToken = default)
+    [Authorize(Roles = Roles.SuperAdmin)]
+    [RequirePermission(Permissions.TrainersDelete)]
+    public async Task<IActionResult> Delete([FromForm] int id, CancellationToken cancellationToken = default)
     {
         var result = await _trainerService.RemoveTrainerAsync(id, cancellationToken);
 
